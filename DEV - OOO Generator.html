@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Out of Office Message Generator — Improved</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root { 
+      --ln-blue: #0085ca;   /* Lineage Blue (Air) */
+      --ln-teal: #00aec7;   /* Lineage Teal (Sea) */
+      --ln-green:#00c389;   /* Lineage Green (Land) */
+      --ln-gray:#53565a;    /* Cool Gray 11 */
+      --ln-gray-5:#b1b3b3;  /* Cool Gray 5 */
+    }
+    body { font-family: 'Inter', sans-serif; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px) } to { opacity: 1; transform: translateY(0) } }
+    .fade-in { animation: fadeIn .25s ease-out }
+    .btn-ln { color: #fff; border-radius: .65rem; padding:.5rem .75rem; font-weight:600; }
+    .btn-blue { background: var(--ln-blue); }
+    .btn-blue:hover { filter: brightness(.95); }
+    .btn-teal { background: var(--ln-teal); }
+    .btn-teal:hover { filter: brightness(.95); }
+    .btn-green { background: var(--ln-green); }
+    .btn-green:hover { filter: brightness(.95); }
+    .ln-border { border-color: var(--ln-gray-5); }
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-900 antialiased">
+  <div class="min-h-screen p-4 sm:p-6 lg:p-10">
+    <!-- Header -->
+    <header class="max-w-6xl mx-auto mb-6 sm:mb-8">
+      <div class="flex items-center justify-between gap-3">
+        <div>
+          <h1 class="text-2xl sm:text-3xl font-bold tracking-tight">Out of Office Assistant</h1>
+          <p class="text-gray-600 mt-1">Generate clear, friendly OOO messages with cover person.</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="dark-toggle" class="px-3 py-2 rounded-lg border ln-border hover:bg-gray-100 text-sm">Toggle dark</button>
+          <a href="#preview" class="px-3 py-2 rounded-lg border ln-border hover:bg-gray-100 text-sm">Jump to preview</a>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main -->
+    <main class="max-w-6xl mx-auto grid lg:grid-cols-2 gap-6 lg:gap-10">
+      <!-- Form -->
+      <section class="bg-white rounded-2xl shadow-sm border ln-border p-5 sm:p-6">
+        <form id="ooo-form" class="space-y-6" novalidate>
+          <!-- Templates -->
+          <div>
+            <h2 class="text-lg font-semibold">Template</h2>
+            <div class="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label for="template" class="block text-sm font-medium mb-1">Choose a template</label>
+                <select id="template" class="w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--ln-blue)]">
+                  <option value="general">General OOO</option>
+                  <option value="travel">Travel (limited availability)</option>
+                  <option value="conference">Conference</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Dates -->
+          <div>
+            <h2 class="text-lg font-semibold">Dates</h2>
+            <p class="text-sm text-gray-600">Use quick ranges or set custom start/end. Times use your selected time zone.</p>
+            <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label for="start-date" class="block text-sm font-medium mb-1">Start date & time<span class="text-red-600">*</span></label>
+                <input type="datetime-local" id="start-date" class="w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--ln-blue)]" required />
+              </div>
+              <div>
+                <label for="end-date" class="block text-sm font-medium mb-1">End date & time<span class="text-red-600">*</span></label>
+                <input type="datetime-local" id="end-date" class="w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--ln-blue)]" required aria-describedby="date-error" />
+                <p id="date-error" class="text-xs text-red-600 mt-1"></p>
+              </div>
+            </div>
+
+            <div class="mt-3 flex flex-wrap gap-2">
+              <button type="button" data-range="rest-of-day" class="range-btn px-3 py-1.5 rounded-lg bg-blue-50 text-[color:var(--ln-blue)] text-sm hover:bg-blue-100">Rest of today</button>
+              <button type="button" data-range="today" class="range-btn px-3 py-1.5 rounded-lg bg-blue-50 text-[color:var(--ln-blue)] text-sm hover:bg-blue-100">Today (9–5)</button>
+              <button type="button" data-range="tomorrow" class="range-btn px-3 py-1.5 rounded-lg bg-blue-50 text-[color:var(--ln-blue)] text-sm hover:bg-blue-100">Tomorrow (9–5)</button>
+              <button type="button" data-range="next-week" class="range-btn px-3 py-1.5 rounded-lg bg-blue-50 text-[color:var(--ln-blue)] text-sm hover:bg-blue-100">Next week (Mon–Fri)</button>
+            </div>
+
+            <div class="mt-4">
+              <label for="timezone" class="block text-sm font-medium mb-1">Time zone</label>
+              <select id="timezone" class="w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--ln-blue)]" aria-label="Select your time zone"></select>
+              <p id="tz-note" class="text-xs text-gray-500 mt-1">Dates will be formatted in this time zone.</p>
+            </div>
+          </div>
+
+          <hr class="ln-border" />
+
+          <!-- Primary cover -->
+          <div>
+            <h2 class="text-lg font-semibold">Primary cover</h2>
+            <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label for="primary-name" class="block text-sm font-medium mb-1">Name<span class="text-red-600">*</span></label>
+                <input type="text" id="primary-name" placeholder="Jane Doe" class="w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--ln-blue)]" required aria-describedby="primary-name-error" />
+                <p id="primary-name-error" class="text-xs text-red-600 mt-1"></p>
+              </div>
+              <div>
+                <label for="primary-email" class="block text-sm font-medium mb-1">Email</label>
+                <input type="email" id="primary-email" placeholder="Jdoe@onelineage.com" class="w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--ln-blue)]" />
+              </div>
+              <div class="sm:col-span-2">
+                <label for="primary-reason" class="block text-sm font-medium mb-1">Support details</label>
+                <textarea id="primary-reason" rows="2" class="w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--ln-blue)]" placeholder="Daily operations and ticket management…"></textarea>
+                <p class="text-xs text-gray-500 mt-1">Add short context for when to contact this person.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Secondary covers -->
+          <div>
+            <div class="flex items-center justify-between">
+              <h2 class="text-lg font-semibold">Secondary cover(s)</h2>
+              <button type="button" id="add-cover-btn" class="btn-ln btn-gray px-3 py-2" style="background:var(--ln-gray);">+ Add secondary</button>
+            </div>
+            <div id="cover-people-container" class="space-y-4 mt-3"></div>
+          </div>
+
+          <hr class="ln-border" />
+
+          <!-- Communication & support -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <fieldset class="sm:col-span-2">
+              <legend class="text-sm font-medium">Will you check email/Teams while out?</legend>
+              <div class="mt-2 flex items-center gap-6">
+                <label class="inline-flex items-center gap-2">
+                  <input type="radio" name="checking-comms" value="Yes" class="h-4 w-4 border-gray-300" />
+                  <span>Yes</span>
+                </label>
+                <label class="inline-flex items-center gap-2">
+                  <input type="radio" name="checking-comms" value="No" class="h-4 w-4 border-gray-300" checked />
+                  <span>No</span>
+                </label>
+              </div>
+            </fieldset>
+
+            <div>
+              <label for="cell-phone" class="block text-sm font-medium mb-1">Cell phone (optional)</label>
+              <input type="tel" id="cell-phone" inputmode="tel" placeholder="For emergencies only" class="w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--ln-blue)]" />
+            </div>
+
+            <div>
+              <label for="support-link" class="block text-sm font-medium mb-1">Support portal link</label>
+              <input type="url" id="support-link" class="w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--ln-blue)]" value="https://lineage.service-now.com/esc" />
+              <label class="inline-flex items-center gap-2 mt-2">
+                <input type="checkbox" id="include-support-link" class="h-4 w-4 border-gray-300" checked />
+                <span class="text-sm">Include link in message</span>
+              </label>
+            </div>
+
+            <!-- Save settings -->
+            <div class="sm:col-span-2 flex items-center gap-3 pt-2">
+              <button type="button" id="save-settings" class="btn-ln btn-green">Save my settings</button>
+              <button type="button" id="clear-settings" class="px-3 py-2 rounded-lg border ln-border text-sm hover:bg-gray-50">Clear saved</button>
+            </div>
+          </div>
+        </form>
+      </section>
+
+      <!-- Preview -->
+      <section id="preview" class="bg-white rounded-2xl shadow-sm border ln-border p-5 sm:p-6 flex flex-col">
+        <h2 class="text-lg font-semibold">Preview</h2>
+        <div class="mt-3 grid grid-cols-1 gap-3">
+          <div>
+            <label for="subject" class="block text-sm font-medium mb-1">Subject</label>
+            <input id="subject" class="w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--ln-blue)]" readonly />
+          </div>
+          <div class="min-h-[260px]">
+            <label for="output-message" class="block text-sm font-medium mb-1">Message (plain text)</label>
+            <textarea id="output-message" class="w-full h-56 rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 resize-y focus:outline-none focus:ring-2 focus:ring-[var(--ln-blue)]" readonly></textarea>
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1">Message (HTML preview with clickable links)</label>
+            <div id="html-preview" class="rounded-lg border ln-border p-3 bg-gray-50 text-sm"></div>
+          </div>
+        </div>
+        <div class="mt-3 flex flex-wrap items-center gap-2">
+          <button id="copy-subject" class="btn-ln btn-blue">Copy subject</button>
+          <button id="copy-message" class="btn-ln btn-blue">Copy message</button>
+          <button id="copy-html" class="btn-ln btn-teal">Copy as HTML</button>
+          <button id="download-ics" class="btn-ln btn-blue">Download Calendar Event (.ics)</button>
+          <span id="copy-feedback" class="text-sm text-green-700 opacity-0 transition-opacity">Copied!</span>
+        </div>
+        <p class="mt-4 text-xs text-gray-500">Pro tip: make sure your primary cover has the right access and context before you go.</p>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const els = {
+      form: document.getElementById('ooo-form'),
+      template: document.getElementById('template'),
+      tz: document.getElementById('timezone'),
+      start: document.getElementById('start-date'),
+      end: document.getElementById('end-date'),
+      dateErr: document.getElementById('date-error'),
+      primaryName: document.getElementById('primary-name'),
+      primaryEmail: document.getElementById('primary-email'),
+      primaryReason: document.getElementById('primary-reason'),
+      coverWrap: document.getElementById('cover-people-container'),
+      addCover: document.getElementById('add-cover-btn'),
+      checkYesNo: () => document.querySelector('input[name="checking-comms"]:checked'),
+      cell: document.getElementById('cell-phone'),
+      includeSupport: document.getElementById('include-support-link'),
+      supportLink: document.getElementById('support-link'),
+      subject: document.getElementById('subject'),
+      msg: document.getElementById('output-message'),
+      htmlPreview: document.getElementById('html-preview'),
+      copySubject: document.getElementById('copy-subject'),
+      copyMsg: document.getElementById('copy-message'),
+      copyHtml: document.getElementById('copy-html'),
+      copied: document.getElementById('copy-feedback'),
+      darkToggle: document.getElementById('dark-toggle'),
+      rangeBtns: () => document.querySelectorAll('.range-btn'),
+      saveSettings: document.getElementById('save-settings'),
+      clearSettings: document.getElementById('clear-settings'),
+      downloadICS: document.getElementById('download-ics')
+    };
+
+    let coverId = 0;
+
+    // Init
+    populateTimezones();
+    setDefaultDates();
+    loadSettings();
+    wireEvents();
+    updateOutputs();
+
+    function wireEvents(){
+      els.form.addEventListener('input', debounce(onFormInput, 250));
+      els.template.addEventListener('change', ()=>{ updateOutputs(); saveSettings(); });
+      els.addCover.addEventListener('click', addCoverBlock);
+      els.coverWrap.addEventListener('click', (e)=>{
+        if(e.target && e.target.matches('.remove-cover')){
+          e.target.closest('.cover-block')?.remove();
+          updateOutputs();
+          saveSettings();
+        }
+      });
+      els.copySubject.addEventListener('click', ()=>copy(els.subject.value));
+      els.copyMsg.addEventListener('click', ()=>copy(els.msg.value));
+      els.copyHtml.addEventListener('click', ()=>copy(toHtmlEmail(els.subject.value, els.msg.value)));
+      els.darkToggle.addEventListener('click', toggleDark);
+      els.rangeBtns().forEach(btn=>btn.addEventListener('click', ()=>applyQuickRange(btn.dataset.range)));
+      els.saveSettings.addEventListener('click', saveSettings);
+      els.clearSettings.addEventListener('click', clearSettings);
+      els.downloadICS.addEventListener('click', downloadICS);
+    }
+
+    function toggleDark(){
+      document.documentElement.classList.toggle('dark');
+      document.body.classList.toggle('bg-gray-950');
+      document.body.classList.toggle('text-gray-100');
+    }
+
+    function debounce(fn, wait){ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a), wait) } }
+
+    function onFormInput(){
+      validateDates();
+      validatePrimary();
+      updateOutputs();
+    }
+
+    function setDefaultDates(){
+      const now = new Date();
+      const start = new Date(now);
+      start.setMinutes(0,0,0);
+      const end = new Date(start); end.setHours(start.getHours()+8);
+      els.start.value = toLocalInput(start);
+      els.end.value = toLocalInput(end);
+    }
+
+    function toLocalInput(d){
+      const pad = n=>String(n).padStart(2,'0');
+      return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
+
+    function populateTimezones(){
+      const userTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      const list = (Intl.supportedValuesOf && Intl.supportedValuesOf('timeZone')) || [userTz];
+      list.forEach(tz=>{
+        const o=document.createElement('option');
+        o.value=tz; o.textContent=tz.replaceAll('_',' ');
+        if(tz===userTz) o.selected=true;
+        els.tz.appendChild(o);
+      });
+    }
+
+    function applyQuickRange(kind){
+      const now = new Date();
+      const start = new Date(now);
+      const end = new Date(now);
+      const setWorkday = (base)=>{ base.setHours(9,0,0,0); };
+      switch(kind){
+        case 'rest-of-day':
+          start.setMinutes(0,0,0);
+          end.setHours(17,0,0,0);
+          break;
+        case 'today':
+          setWorkday(start);
+          end.setTime(start.getTime());
+          end.setHours(17,0,0,0);
+          break;
+        case 'tomorrow':
+          start.setDate(start.getDate()+1); setWorkday(start);
+          end.setTime(start.getTime()); end.setHours(17,0,0,0);
+          break;
+        case 'next-week':
+          const day = now.getDay(); // 0=Sun
+          const daysToMon = (1 - day + 7) % 7; // days until next Monday
+          start.setDate(now.getDate()+daysToMon);
+          setWorkday(start);
+          end.setTime(start.getTime());
+          end.setDate(start.getDate()+4); // Friday
+          end.setHours(17,0,0,0);
+          break;
+      }
+      els.start.value = toLocalInput(start);
+      els.end.value = toLocalInput(end);
+      updateOutputs();
+      saveSettings();
+    }
+
+    function validateDates(){
+      const s = els.start.value; const e = els.end.value;
+      els.end.min = s || '';
+      if(s && e && new Date(e) < new Date(s)){
+        els.dateErr.textContent = 'End date cannot be before the start date.';
+        return false;
+      }
+      els.dateErr.textContent = '';
+      return true;
+    }
+
+    function validatePrimary(){
+      const nameErr = document.getElementById('primary-name-error');
+      if(!els.primaryName.value.trim()){
+        nameErr.textContent = 'Primary contact name is required.';
+        return false;
+      }
+      nameErr.textContent = '';
+      return true;
+    }
+
+    function getSecondary(){
+      const out=[];
+      document.querySelectorAll('.cover-block').forEach(b=>{
+        const name = b.querySelector('.sec-name').value.trim();
+        const email = b.querySelector('.sec-email').value.trim();
+        const reason = b.querySelector('.sec-reason').value.trim();
+        if(name) out.push({name,email,reason});
+      });
+      return out;
+    }
+
+    function addCoverBlock(){
+      coverId++;
+      const wrap = document.createElement('div');
+      wrap.className = 'cover-block border ln-border rounded-xl p-4 fade-in';
+      wrap.innerHTML = `
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="font-medium">Secondary cover #${coverId}</h3>
+          <button type="button" class="remove-cover btn-ln" style="background:var(--ln-gray)">Remove</button>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-sm mb-1">Name</label>
+            <input type="text" class="sec-name w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--ln-blue)]" placeholder="John Smith" />
+          </div>
+          <div>
+            <label class="block text-sm mb-1">Email</label>
+            <input type="email" class="sec-email w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--ln-blue)]" placeholder="Jdoe@onelineage.com" />
+          </div>
+          <div class="sm:col-span-2">
+            <label class="block text-sm mb-1">Support details</label>
+            <textarea rows="2" class="sec-reason w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--ln-blue)]" placeholder="Escalations on Project X…"></textarea>
+          </div>
+        </div>`;
+      els.coverWrap.appendChild(wrap);
+    }
+
+    function getForm(){
+      return {
+        template: els.template.value,
+        start: els.start.value,
+        end: els.end.value,
+        tz: els.tz.value,
+        primaryName: els.primaryName.value.trim(),
+        primaryEmail: els.primaryEmail.value.trim(),
+        primaryReason: els.primaryReason.value.trim(),
+        secondary: getSecondary(),
+        checking: els.checkYesNo()?.value || 'No',
+        cell: els.cell.value.trim(),
+        includeSupport: els.includeSupport.checked,
+        supportLink: els.supportLink.value.trim(),
+      };
+    }
+
+    function fmt(dateString, tz){
+      if(!dateString) return null;
+      const d = new Date(dateString);
+      return new Intl.DateTimeFormat('en-US', {
+        timeZone: tz,
+        weekday: 'long', month: 'long', day: 'numeric',
+        hour: 'numeric', minute: '2-digit', hour12: true
+      }).format(d);
+    }
+
+    function buildMessage(data){
+      const s = fmt(data.start, data.tz);
+      const e = fmt(data.end, data.tz);
+      let m = 'Thank you for your message.\n\n';
+
+      if (data.template === 'travel') {
+        m += (s && e)
+          ? `I am traveling and out of the office from ${s} to ${e} (${data.tz}). I may have limited availability.\n\n`
+          : 'I am traveling and out of the office and may have limited availability.\n\n';
+      } else if (data.template === 'conference') {
+        m += (s && e)
+          ? `I am attending a conference from ${s} to ${e} (${data.tz}). Responses may be delayed.\n\n`
+          : 'I am attending a conference and responses may be delayed.\n\n';
+      } else {
+        m += (s && e)
+          ? `I am currently out of the office from ${s} to ${e} (${data.tz}).\n\n`
+          : 'I am currently out of the office and will respond upon my return.\n\n';
+      }
+
+      m += data.checking === 'Yes'
+        ? 'I will have limited access to email and will respond to your message as soon as possible.\n\n'
+        : 'I will not be checking email or Teams during this time. I will respond to your message upon my return.\n\n';
+
+      if(data.primaryName){
+        const reason = data.primaryReason ? `For matters related to "${data.primaryReason}"` : 'For assistance during my absence';
+        m += `${reason}, please contact my primary cover, ${data.primaryName}${data.primaryEmail ? ` at ${data.primaryEmail}` : ''}.\n`;
+      }
+
+      if(data.secondary.length){
+        data.secondary.forEach(p=>{
+          const r = p.reason ? `for matters related to "${p.reason}"` : 'for other inquiries';
+          m += `Alternatively, ${r}, you may also reach out to ${p.name}${p.email ? ` at ${p.email}` : ''}.\n`;
+        });
+      }
+
+      if(data.includeSupport && data.supportLink){
+        m += `\nFor any new IT support requests, please submit a ticket in the Portal: ${data.supportLink}\n\n`;
+      }
+
+      if(data.cell){ m += `For urgent matters that cannot be handled by my cover, you can reach me on my cell at ${data.cell}.\n\n`; }
+
+      m += 'Thank you,';
+      return m;
+    }
+
+    function buildSubject(data){
+      const s = fmt(data.start, data.tz); const e = fmt(data.end, data.tz);
+      const prefix = data.template === 'conference' ? 'Conference OOO' : (data.template === 'travel' ? 'Travel OOO' : 'OOO');
+      return (s && e) ? `${prefix}: ${s}–${e} (${data.tz})` : `${prefix}`;
+    }
+
+    function updateOutputs(){
+      if(!validateDates() || !validatePrimary()){
+        els.subject.value = 'Out of Office';
+        els.msg.value = 'Please fill out all required fields correctly.';
+        els.htmlPreview.innerHTML = '<em>Please complete required fields.</em>';
+        return;
+      }
+      const data = getForm();
+      els.subject.value = buildSubject(data);
+      els.msg.value = buildMessage(data);
+      els.htmlPreview.innerHTML = toHtmlEmail(els.subject.value, els.msg.value, true);
+    }
+
+    function linkify(text){
+      const urlRegex = /(https?:\/\/[^\s]+)/g;
+      return text.replace(urlRegex, (url) => `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`);
+    }
+
+    function toHtmlEmail(subject, body, preview=false){
+      const safe = (s)=>s
+        .replace(/&/g,'&amp;')
+        .replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;');
+      const withLinks = linkify(safe(body)).replace(/\n/g,'<br>');
+      const html = `<!-- Subject: ${safe(subject)} -->\n<div style="font:14px/1.5 -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Inter,Helvetica,Arial,sans-serif;color:#111">${withLinks}</div>`;
+      return preview ? html : `<!-- Subject: ${safe(subject)} -->\n` + html;
+    }
+
+    async function copy(text){ try{ await navigator.clipboard.writeText(text); showCopied(); }catch{} }
+    function showCopied(){ els.copied.classList.remove('opacity-0'); setTimeout(()=>els.copied.classList.add('opacity-0'), 1400); }
+
+    // ---- Persistence ----
+    function saveSettings(){ localStorage.setItem('ooo-generator', JSON.stringify(getForm())); showCopied(); }
+    function loadSettings(){ try{ const raw = localStorage.getItem('ooo-generator'); if(!raw) return; const d=JSON.parse(raw);
+      if(d.template) els.template.value=d.template;
+      if(d.start) els.start.value=d.start; if(d.end) els.end.value=d.end; if(d.tz) els.tz.value=d.tz;
+      if(d.primaryName) els.primaryName.value=d.primaryName; if(d.primaryEmail) els.primaryEmail.value=d.primaryEmail; if(d.primaryReason) els.primaryReason.value=d.primaryReason;
+      if(d.checking){ const r=document.querySelector(`input[name="checking-comms"][value="${d.checking}"]`); if(r) r.checked=true; }
+      if(d.cell) els.cell.value=d.cell; if(typeof d.includeSupport==='boolean') els.includeSupport.checked=d.includeSupport; if(d.supportLink) els.supportLink.value=d.supportLink;
+      if(Array.isArray(d.secondary)) d.secondary.forEach(p=>{ addCoverBlock(); const last=els.coverWrap.lastElementChild; if(last){ last.querySelector('.sec-name').value=p.name||''; last.querySelector('.sec-email').value=p.email||''; last.querySelector('.sec-reason').value=p.reason||''; }});
+    }catch(e){} }
+    function clearSettings(){ localStorage.removeItem('ooo-generator'); location.reload(); }
+
+    // ---- ICS generation ----
+    function pad(n){ return String(n).padStart(2,'0'); }
+    function toUtcIcs(dt){ const d = new Date(dt); return d.getUTCFullYear()+pad(d.getUTCMonth()+1)+pad(d.getUTCDate())+'T'+pad(d.getUTCHours())+pad(d.getUTCMinutes())+pad(d.getUTCSeconds())+'Z'; }
+    function buildIcs(){ const data=getForm(); if(!data.start||!data.end) return null; const uid='ooo-'+Date.now()+'@local';
+      const dtstamp=toUtcIcs(new Date()); const dtstart=toUtcIcs(data.start); const dtend=toUtcIcs(data.end); const subject=buildSubject(data).replace(/\n/g,' ');
+      const desc=buildMessage(data).replace(/\n/g,'\\n');
+      return [ 'BEGIN:VCALENDAR','PRODID:-//OOO Generator//EN','VERSION:2.0','METHOD:PUBLISH','BEGIN:VEVENT','UID:'+uid,'DTSTAMP:'+dtstamp,'DTSTART:'+dtstart,'DTEND:'+dtend,
+        'SUMMARY:'+subject,'DESCRIPTION:'+desc,'TRANSP:OPAQUE','STATUS:CONFIRMED','X-MICROSOFT-CDO-BUSYSTATUS:OOF','X-MICROSOFT-CDO-INTENDEDSTATUS:OOF','X-MICROSOFT-DISALLOW-COUNTER:TRUE','END:VEVENT','END:VCALENDAR' ].join('\r\n'); }
+    function downloadICS(){ const ics=buildIcs(); if(!ics) return; const blob=new Blob([ics],{type:'text/calendar'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='Out_of_Office.ics'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url); }
+  </script>
+</body>
+</html>
