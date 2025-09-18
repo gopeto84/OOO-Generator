@@ -417,6 +417,28 @@
       }).format(d);
     }
 
+    function formatDateRange(startStr, endStr, tz) {
+      if (!startStr || !endStr) return '';
+      const start = new Date(startStr);
+      const end = new Date(endStr);
+      const isSameDay = start.getFullYear() === end.getFullYear() &&
+                        start.getMonth() === end.getMonth() &&
+                        start.getDate() === end.getDate();
+
+      const fullFormat = { timeZone: tz, weekday: 'long', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true };
+      const timeFormat = { timeZone: tz, hour: 'numeric', minute: '2-digit', hour12: true };
+
+      const startFormatted = new Intl.DateTimeFormat('en-US', fullFormat).format(start);
+
+      if (isSameDay) {
+        const endFormatted = new Intl.DateTimeFormat('en-US', timeFormat).format(end);
+        return `${startFormatted}–${endFormatted}`;
+      } else {
+        const endFormatted = new Intl.DateTimeFormat('en-US', fullFormat).format(end);
+        return `${startFormatted}–${endFormatted}`;
+      }
+    }
+
     function buildMessage(data){
       const s = fmt(data.start, data.tz);
       const e = fmt(data.end, data.tz);
@@ -463,9 +485,9 @@
     }
 
     function buildSubject(data){
-      const s = fmt(data.start, data.tz); const e = fmt(data.end, data.tz);
       const prefix = data.template === 'conference' ? 'Conference OOO' : (data.template === 'travel' ? 'Travel OOO' : 'OOO');
-      return (s && e) ? `${prefix}: ${s}–${e} (${data.tz})` : `${prefix}`;
+      const dateRange = formatDateRange(data.start, data.end, data.tz);
+      return dateRange ? `${prefix}: ${dateRange} (${data.tz})` : prefix;
     }
 
     function updateOutputs(){

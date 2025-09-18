@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Test for OOO Generator</title>
+    <style>
+        body { font-family: sans-serif; }
+        .test-case { margin-bottom: 1em; padding: 0.5em; border: 1px solid #ccc; }
+        .pass { background-color: #d4edda; }
+        .fail { background-color: #f8d7da; }
+    </style>
+</head>
+<body>
+    <h1>OOO Generator Tests</h1>
+    <div id="test-results"></div>
+
+    <script>
+        // Functions from index.html
+        function formatDateRange(startStr, endStr, tz) {
+            if (!startStr || !endStr) return '';
+            const start = new Date(startStr);
+            const end = new Date(endStr);
+            const isSameDay = start.getFullYear() === end.getFullYear() &&
+                              start.getMonth() === end.getMonth() &&
+                              start.getDate() === end.getDate();
+
+            const fullFormat = { timeZone: tz, weekday: 'long', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true };
+            const timeFormat = { timeZone: tz, hour: 'numeric', minute: '2-digit', hour12: true };
+
+            const startFormatted = new Intl.DateTimeFormat('en-US', fullFormat).format(start);
+
+            if (isSameDay) {
+                const endFormatted = new Intl.DateTimeFormat('en-US', timeFormat).format(end);
+                return `${startFormatted}–${endFormatted}`;
+            } else {
+                const endFormatted = new Intl.DateTimeFormat('en-US', fullFormat).format(end);
+                return `${startFormatted}–${endFormatted}`;
+            }
+        }
+
+        function buildSubject(data){
+            const prefix = data.template === 'conference' ? 'Conference OOO' : (data.template === 'travel' ? 'Travel OOO' : 'OOO');
+            const dateRange = formatDateRange(data.start, data.end, data.tz);
+            return dateRange ? `${prefix}: ${dateRange} (${data.tz})` : prefix;
+        }
+
+        // Test suite
+        const testResults = document.getElementById('test-results');
+
+        function runTest(name, testFn) {
+            const resultDiv = document.createElement('div');
+            resultDiv.classList.add('test-case');
+            try {
+                testFn();
+                resultDiv.classList.add('pass');
+                resultDiv.textContent = `PASS: ${name}`;
+            } catch (e) {
+                resultDiv.classList.add('fail');
+                resultDiv.textContent = `FAIL: ${name} - ${e.message}`;
+                console.error(e);
+            }
+            testResults.appendChild(resultDiv);
+        }
+
+        runTest('Same day range', () => {
+            const result = formatDateRange('2025-09-22T09:00:00', '2025-09-22T17:00:00', 'America/New_York');
+            const expected = 'Monday, September 22, 2025, 9:00 AM–5:00 PM';
+            if (result !== expected) {
+                throw new Error(`Expected "${expected}", but got "${result}"`);
+            }
+        });
+
+        runTest('Multi-day range', () => {
+            const result = formatDateRange('2025-09-22T09:00:00', '2025-09-23T17:00:00', 'America/New_York');
+            const expected = 'Monday, September 22, 2025, 9:00 AM–Tuesday, September 23, 2025, 5:00 PM';
+            if (result !== expected) {
+                throw new Error(`Expected "${expected}", but got "${result}"`);
+            }
+        });
+
+        runTest('buildSubject with same day', () => {
+            const data = {
+                template: 'general',
+                start: '2025-09-22T09:00:00',
+                end: '2025-09-22T17:00:00',
+                tz: 'America/New_York'
+            };
+            const result = buildSubject(data);
+            const expected = 'OOO: Monday, September 22, 2025, 9:00 AM–5:00 PM (America/New_York)';
+            if (result !== expected) {
+                throw new Error(`Expected "${expected}", but got "${result}"`);
+            }
+        });
+
+        runTest('buildSubject with multi-day', () => {
+            const data = {
+                template: 'travel',
+                start: '2025-09-22T09:00:00',
+                end: '2025-09-23T17:00:00',
+                tz: 'America/New_York'
+            };
+            const result = buildSubject(data);
+            const expected = 'Travel OOO: Monday, September 22, 2025, 9:00 AM–Tuesday, September 23, 2025, 5:00 PM (America/New_York)';
+            if (result !== expected) {
+                throw new Error(`Expected "${expected}", but got "${result}"`);
+            }
+        });
+
+    </script>
+</body>
+</html>
