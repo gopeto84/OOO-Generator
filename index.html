@@ -1,547 +1,887 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Out of Office Message Generator — Improved</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Professional OOO Generator</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <style>
-    :root { 
-      --ln-blue: #0085ca;   /* Lineage Blue (Air) */
-      --ln-teal: #00aec7;   /* Lineage Teal (Sea) */
-      --ln-green:#00c389;   /* Lineage Green (Land) */
-      --ln-gray:#53565a;    /* Cool Gray 11 */
-      --ln-gray-5:#b1b3b3;  /* Cool Gray 5 */
+  <script>
+    tailwind.config = {
+      darkMode: 'media',
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'sans-serif'] },
+          colors: {
+            brand: { 50: '#f0f9ff', 100: '#e0f2fe', 500: '#0ea5e9', 600: '#0284c7', 700: '#0369a1', 900: '#0c4a6e' }
+          }
+        }
+      }
     }
-    body { font-family: 'Inter', sans-serif; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px) } to { opacity: 1; transform: translateY(0) } }
-    .fade-in { animation: fadeIn .25s ease-out }
-    .btn-ln { color: #fff; border-radius: .65rem; padding:.5rem .75rem; font-weight:600; }
-    .btn-blue { background: var(--ln-blue); }
-    .btn-blue:hover { filter: brightness(.95); }
-    .btn-teal { background: var(--ln-teal); }
-    .btn-teal:hover { filter: brightness(.95); }
-    .btn-green { background: var(--ln-green); }
-    .btn-green:hover { filter: brightness(.95); }
-    .ln-border { border-color: var(--ln-gray-5); }
+  </script>
+  <style>
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    .dark ::-webkit-scrollbar-thumb { background: #475569; }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .animate-slide-up { animation: slideUp 0.3s ease-out forwards; }
+    
+    .input-base { @apply w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:ring-2 focus:ring-brand-500/50 outline-none transition-all; }
+    .label-base { @apply block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5; }
+    .btn-secondary { @apply px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors; }
+    .btn-primary { @apply px-4 py-2 rounded-lg bg-brand-600 text-white text-sm font-semibold shadow-sm hover:bg-brand-700 focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 transition-all; }
+
+    /* Accordion Styling */
+    details > summary { list-style: none; }
+    details > summary::-webkit-details-marker { display: none; }
+    details[open] summary ~ * { animation: slideUp 0.2s ease-in-out; }
+    details summary svg { transition: transform 0.2s; }
+    details[open] summary svg { transform: rotate(180deg); }
   </style>
 </head>
-<body class="bg-gray-50 text-gray-900 antialiased">
-  <div class="min-h-screen p-4 sm:p-6 lg:p-10">
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 antialiased transition-colors duration-300">
+
+  <!-- Toast -->
+  <div id="toast-container" class="fixed top-5 left-1/2 -translate-x-1/2 z-50 pointer-events-none"></div>
+
+  <div class="min-h-screen max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+    
     <!-- Header -->
-    <header class="max-w-6xl mx-auto mb-6 sm:mb-8">
-      <div class="flex items-center justify-between gap-3">
-        <div>
-          <h1 class="text-2xl sm:text-3xl font-bold tracking-tight">Out of Office Assistant</h1>
-          <p class="text-gray-600 mt-1">Generate clear, friendly OOO messages with cover person.</p>
-        </div>
-        <div class="flex items-center gap-2">
-          <button id="dark-toggle" class="px-3 py-2 rounded-lg border ln-border hover:bg-gray-100 text-sm">Toggle dark</button>
-          <a href="#preview" class="px-3 py-2 rounded-lg border ln-border hover:bg-gray-100 text-sm">Jump to preview</a>
-        </div>
+    <header class="mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-gray-200 dark:border-gray-700 pb-6">
+      <div>
+        <h1 class="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">Out of Office <span class="text-brand-600">Generator</span></h1>
+        <p class="mt-2 text-gray-600 dark:text-gray-400 max-w-2xl">Create polite, detailed auto-reply messages.</p>
+      </div>
+      <div class="flex gap-2">
+         <button type="button" id="reset-app" class="text-xs text-gray-500 hover:text-red-500 underline">Reset Current Form</button>
       </div>
     </header>
 
-    <!-- Main -->
-    <main class="max-w-6xl mx-auto grid lg:grid-cols-2 gap-6 lg:gap-10">
-      <!-- Form -->
-      <section class="bg-white rounded-2xl shadow-sm border ln-border p-5 sm:p-6">
-        <form id="ooo-form" class="space-y-6" novalidate>
-          <!-- Templates -->
-          <div>
-            <h2 class="text-lg font-semibold">Template</h2>
-            <div class="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <main class="grid lg:grid-cols-12 gap-8 items-start">
+      
+      <!-- LEFT COLUMN: Inputs (Span 7) -->
+      <section class="lg:col-span-7 space-y-6">
+
+        <!-- Card: Saved Profiles (Presets) -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div class="p-5 sm:p-6 border-b border-gray-100 dark:border-gray-700 bg-brand-50/50 dark:bg-gray-800/50 flex justify-between items-center">
+                <h2 class="font-semibold text-lg text-brand-900 dark:text-brand-100 flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path></svg>
+                    Saved Profiles
+                </h2>
+            </div>
+            <div class="p-5 sm:p-6">
+                <div class="flex gap-3 mb-4">
+                    <input id="preset-name" class="input-base" placeholder="Profile Name (e.g. 'Summer Vacation', 'Business Trip')">
+                    <button id="save-preset" class="btn-primary whitespace-nowrap">Save Profile</button>
+                </div>
+                <div id="preset-list" class="space-y-2">
+                    <!-- Presets injected here -->
+                    <p class="text-xs text-gray-400 italic text-center py-2">No saved profiles yet.</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Card: Configuration -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+          <div class="p-5 sm:p-6 border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50">
+            <h2 class="font-semibold text-lg flex items-center gap-2">
+              <svg class="w-5 h-5 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+              Details & Context
+            </h2>
+          </div>
+          <div class="p-5 sm:p-6 space-y-5">
+            
+            <!-- Template Selection -->
+            <div class="grid sm:grid-cols-2 gap-5">
               <div>
-                <label for="template" class="block text-sm font-medium mb-1">Choose a template</label>
-                <select id="template" class="w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--ln-blue)]">
+                <label for="template" class="label-base">Template Style</label>
+                <select id="template" class="input-base">
                   <option value="general">General OOO</option>
-                  <option value="travel">Travel (limited availability)</option>
-                  <option value="conference">Conference</option>
+                  <option value="holiday">National Holiday</option>
+                  <option value="travel">Business Travel</option>
+                  <option value="conference">Conference / Training</option>
+                  <option value="medical">Medical / Personal</option>
                 </select>
               </div>
-            </div>
-          </div>
-
-          <!-- Dates -->
-          <div>
-            <h2 class="text-lg font-semibold">Dates</h2>
-            <p class="text-sm text-gray-600">Use quick ranges or set custom start/end. Times use your selected time zone.</p>
-            <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label for="start-date" class="block text-sm font-medium mb-1">Start date & time<span class="text-red-600">*</span></label>
-                <input type="datetime-local" id="start-date" class="w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--ln-blue)]" required />
-              </div>
-              <div>
-                <label for="end-date" class="block text-sm font-medium mb-1">End date & time<span class="text-red-600">*</span></label>
-                <input type="datetime-local" id="end-date" class="w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--ln-blue)]" required aria-describedby="date-error" />
-                <p id="date-error" class="text-xs text-red-600 mt-1"></p>
+              <div id="holiday-field" class="hidden animate-slide-up">
+                <label for="holiday-name" class="label-base">Holiday Name</label>
+                <input id="holiday-name" placeholder="e.g., Labor Day" class="input-base" />
               </div>
             </div>
 
-            <div class="mt-3 flex flex-wrap gap-2">
-              <button type="button" data-range="rest-of-day" class="range-btn px-3 py-1.5 rounded-lg bg-blue-50 text-[color:var(--ln-blue)] text-sm hover:bg-blue-100">Rest of today</button>
-              <button type="button" data-range="today" class="range-btn px-3 py-1.5 rounded-lg bg-blue-50 text-[color:var(--ln-blue)] text-sm hover:bg-blue-100">Today (9–5)</button>
-              <button type="button" data-range="tomorrow" class="range-btn px-3 py-1.5 rounded-lg bg-blue-50 text-[color:var(--ln-blue)] text-sm hover:bg-blue-100">Tomorrow (9–5)</button>
-              <button type="button" data-range="next-week" class="range-btn px-3 py-1.5 rounded-lg bg-blue-50 text-[color:var(--ln-blue)] text-sm hover:bg-blue-100">Next week (Mon–Fri)</button>
-            </div>
-
-            <div class="mt-4">
-              <label for="timezone" class="block text-sm font-medium mb-1">Time zone</label>
-              <select id="timezone" class="w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--ln-blue)]" aria-label="Select your time zone"></select>
-              <p id="tz-note" class="text-xs text-gray-500 mt-1">Dates will be formatted in this time zone.</p>
-            </div>
-          </div>
-
-          <hr class="ln-border" />
-
-          <!-- Primary cover -->
-          <div>
-            <h2 class="text-lg font-semibold">Primary cover</h2>
-            <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label for="primary-name" class="block text-sm font-medium mb-1">Name<span class="text-red-600">*</span></label>
-                <input type="text" id="primary-name" placeholder="Jane Doe" class="w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--ln-blue)]" required aria-describedby="primary-name-error" />
-                <p id="primary-name-error" class="text-xs text-red-600 mt-1"></p>
-              </div>
-              <div>
-                <label for="primary-email" class="block text-sm font-medium mb-1">Email</label>
-                <input type="email" id="primary-email" placeholder="Jdoe@onelineage.com" class="w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--ln-blue)]" />
-              </div>
-              <div class="sm:col-span-2">
-                <label for="primary-reason" class="block text-sm font-medium mb-1">Support details</label>
-                <textarea id="primary-reason" rows="2" class="w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--ln-blue)]" placeholder="Daily operations and ticket management…"></textarea>
-                <p class="text-xs text-gray-500 mt-1">Add short context for when to contact this person.</p>
-              </div>
-            </div>
-          </div>
-
-          <!-- Secondary covers -->
-          <div>
-            <div class="flex items-center justify-between">
-              <h2 class="text-lg font-semibold">Secondary cover(s)</h2>
-              <button type="button" id="add-cover-btn" class="btn-ln btn-gray px-3 py-2" style="background:var(--ln-gray);">+ Add secondary</button>
-            </div>
-            <div id="cover-people-container" class="space-y-4 mt-3"></div>
-          </div>
-
-          <hr class="ln-border" />
-
-          <!-- Communication & support -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <fieldset class="sm:col-span-2">
-              <legend class="text-sm font-medium">Will you check email/Teams while out?</legend>
-              <div class="mt-2 flex items-center gap-6">
-                <label class="inline-flex items-center gap-2">
-                  <input type="radio" name="checking-comms" value="Yes" class="h-4 w-4 border-gray-300" />
-                  <span>Yes</span>
-                </label>
-                <label class="inline-flex items-center gap-2">
-                  <input type="radio" name="checking-comms" value="No" class="h-4 w-4 border-gray-300" checked />
-                  <span>No</span>
-                </label>
-              </div>
-            </fieldset>
-
+            <!-- Context Note -->
             <div>
-              <label for="cell-phone" class="block text-sm font-medium mb-1">Cell phone (optional)</label>
-              <input type="tel" id="cell-phone" inputmode="tel" placeholder="For emergencies only" class="w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--ln-blue)]" />
+              <label for="template-note" class="label-base">Extra Context (Optional)</label>
+              <input id="template-note" placeholder="e.g., I am attending the Global Summit..." class="input-base" />
             </div>
 
-            <div>
-              <label for="support-link" class="block text-sm font-medium mb-1">Support portal link</label>
-              <input type="url" id="support-link" class="w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--ln-blue)]" value="https://lineage.service-now.com/esc" />
-              <label class="inline-flex items-center gap-2 mt-2">
-                <input type="checkbox" id="include-support-link" class="h-4 w-4 border-gray-300" checked />
-                <span class="text-sm">Include link in message</span>
-              </label>
+            <!-- Dates -->
+            <div class="pt-4 border-t border-gray-100 dark:border-gray-700">
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-sm font-medium text-gray-900 dark:text-white">Duration</span>
+                <div class="flex gap-3">
+                   <label class="flex items-center gap-2 text-xs cursor-pointer select-none">
+                    <input type="checkbox" id="allDay" class="rounded border-gray-300 text-brand-600 focus:ring-brand-500">
+                    <span>All Day</span>
+                  </label>
+                </div>
+              </div>
+              
+              <div class="grid sm:grid-cols-2 gap-4">
+                <div>
+                  <label for="start-date" class="label-base">Start</label>
+                  <input type="datetime-local" id="start-date" class="input-base" required />
+                </div>
+                <div>
+                  <label for="end-date" class="label-base">End</label>
+                  <input type="datetime-local" id="end-date" class="input-base" required />
+                </div>
+              </div>
+              <p id="date-error" class="text-xs text-red-500 mt-2 hidden font-medium"></p>
+
+              <!-- Quick Ranges -->
+              <div class="mt-3 flex flex-wrap gap-2">
+                <button type="button" data-range="rest-of-today" class="range-btn text-xs px-2.5 py-1.5 bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-brand-300 rounded hover:bg-brand-100 transition">Rest of Today</button>
+                <button type="button" data-range="tomorrow" class="range-btn text-xs px-2.5 py-1.5 bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-brand-300 rounded hover:bg-brand-100 transition">Tomorrow</button>
+                <button type="button" data-range="next-week" class="range-btn text-xs px-2.5 py-1.5 bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-brand-300 rounded hover:bg-brand-100 transition">Next Week</button>
+              </div>
+            </div>
+            
+            <!-- Timezone & Settings -->
+            <div class="grid sm:grid-cols-2 gap-4 pt-2">
+               <div>
+                <label for="timezone" class="label-base">Time Zone (for Display)</label>
+                <select id="timezone" class="input-base text-xs"></select>
+               </div>
+               <div class="flex flex-col justify-end pb-1 gap-2">
+                 <label class="flex items-center gap-2 text-sm cursor-pointer select-none">
+                    <input type="checkbox" id="check-email" class="rounded border-gray-300 text-brand-600 focus:ring-brand-500">
+                    <span>Checking Email</span>
+                  </label>
+                  <label class="flex items-center gap-2 text-sm cursor-pointer select-none">
+                    <input type="checkbox" id="check-teams" class="rounded border-gray-300 text-brand-600 focus:ring-brand-500">
+                    <span>Checking MS Teams</span>
+                  </label>
+               </div>
             </div>
 
-            <!-- Save settings -->
-            <div class="sm:col-span-2 flex items-center gap-3 pt-2">
-              <button type="button" id="save-settings" class="btn-ln btn-green">Save my settings</button>
-              <button type="button" id="clear-settings" class="px-3 py-2 rounded-lg border ln-border text-sm hover:bg-gray-50">Clear saved</button>
-            </div>
           </div>
-        </form>
+        </div>
+
+        <!-- Card: Cover & Contacts -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+          <div class="p-5 sm:p-6 border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 flex justify-between items-center">
+            <h2 class="font-semibold text-lg flex items-center gap-2">
+              <svg class="w-5 h-5 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+              Cover & Support
+            </h2>
+          </div>
+          <div class="p-5 sm:p-6 space-y-5">
+            
+            <!-- Primary Contact -->
+            <div id="primary-contact-group" class="bg-gray-50 dark:bg-gray-700/30 p-4 rounded-xl border border-gray-100 dark:border-gray-700">
+              <h3 class="text-xs font-bold text-brand-600 dark:text-brand-400 uppercase tracking-wider mb-3">Primary Colleague</h3>
+              <div class="grid sm:grid-cols-2 gap-4 mb-3">
+                <div>
+                  <label class="label-base">Name</label>
+                  <input type="text" id="primary-name" class="input-base" placeholder="Jane Doe" />
+                </div>
+                <div>
+                  <label class="label-base">Email</label>
+                  <input type="email" id="primary-email" class="input-base" placeholder="jane@example.com" />
+                </div>
+              </div>
+              <div>
+                <label class="label-base text-brand-700 dark:text-brand-300 font-semibold">Topic / Reason for Contact</label>
+                <input type="text" id="primary-reason" class="input-base py-2.5" placeholder="e.g. 'Project X inquiries' or 'Urgent Escalations'" />
+              </div>
+            </div>
+
+            <!-- Secondaries -->
+            <div id="secondary-container" class="space-y-4"></div>
+            
+            <div class="flex gap-3 pt-2">
+              <button type="button" id="add-secondary" class="btn-secondary text-xs flex items-center gap-1">
+                <span>+</span> Add Additional Cover Person
+              </button>
+               <button type="button" id="clear-contacts" class="text-xs text-red-500 hover:text-red-600 px-2">Clear Contacts</button>
+            </div>
+
+            <div class="border-t border-gray-100 dark:border-gray-700 my-4"></div>
+
+            <!-- Emergency & Custom Footer -->
+            <div class="space-y-4">
+              <div>
+                <label class="label-base">Cell Phone (Optional)</label>
+                <input type="tel" id="cell-number" class="input-base" placeholder="+1 555 000 0000" />
+              </div>
+               <div>
+                <label class="label-base">Additional Footer Text (Optional)</label>
+                <textarea id="custom-footer" rows="2" class="input-base" placeholder="I will get back to you regarding..."></textarea>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Card: Help & Instructions -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+          <div class="p-5 sm:p-6 border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50">
+            <h2 class="font-semibold text-lg flex items-center gap-2">
+              <svg class="w-5 h-5 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+              How to set your Out of Office
+            </h2>
+          </div>
+          <div class="divide-y divide-gray-100 dark:divide-gray-700">
+            
+            <details class="group p-5 cursor-pointer">
+              <summary class="flex items-center justify-between font-medium text-sm text-gray-900 dark:text-white hover:text-brand-600 dark:hover:text-brand-400">
+                <span>Outlook — Windows/macOS (Classic)</span>
+                <svg class="w-4 h-4 text-gray-400 group-hover:text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+              </summary>
+              <div class="pt-3 text-sm text-gray-600 dark:text-gray-400 space-y-2 pl-1">
+                <ol class="list-decimal pl-4 space-y-1">
+                  <li>Open Outlook (Classic desktop app).</li>
+                  <li>Go to <strong>File → Automatic Replies (Out of Office)</strong>.</li>
+                  <li>Select <strong>Send automatic replies</strong>.</li>
+                  <li>Check <strong>Only send during this time range</strong>, then set start and end.</li>
+                  <li>Paste the message into the <strong>Inside My Organization</strong> tab (and the Outside tab).</li>
+                </ol>
+                <p class="text-xs italic mt-2 text-gray-500">Note: Outlook Classic auto-replies do not use a subject line.</p>
+              </div>
+            </details>
+
+            <details class="group p-5 cursor-pointer">
+              <summary class="flex items-center justify-between font-medium text-sm text-gray-900 dark:text-white hover:text-brand-600 dark:hover:text-brand-400">
+                <span>Outlook on the Web (OWA) & New Outlook</span>
+                <svg class="w-4 h-4 text-gray-400 group-hover:text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+              </summary>
+              <div class="pt-3 text-sm text-gray-600 dark:text-gray-400 space-y-2 pl-1">
+                <ol class="list-decimal pl-4 space-y-1">
+                  <li>Open <strong>outlook.office.com</strong> (or New Outlook app).</li>
+                  <li>Click the <strong>⚙️ Settings</strong> gear → search for <em>Automatic replies</em>.</li>
+                  <li>Toggle <strong>Automatic replies</strong> on.</li>
+                  <li>Set your start/end times and paste the message body.</li>
+                  <li>Click <strong>Save</strong>.</li>
+                </ol>
+              </div>
+            </details>
+
+            <details class="group p-5 cursor-pointer">
+              <summary class="flex items-center justify-between font-medium text-sm text-gray-900 dark:text-white hover:text-brand-600 dark:hover:text-brand-400">
+                <span>Microsoft Teams</span>
+                <svg class="w-4 h-4 text-gray-400 group-hover:text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+              </summary>
+              <div class="pt-3 text-sm text-gray-600 dark:text-gray-400 space-y-2 pl-1">
+                <ol class="list-decimal pl-4 space-y-1">
+                  <li>Open Teams.</li>
+                  <li>Click your profile picture → <strong>Set status message</strong>.</li>
+                  <li>Click <strong>Schedule out of office</strong> at the bottom.</li>
+                  <li>Toggle <strong>Turn on automatic replies</strong>.</li>
+                  <li>Paste your message. Teams does not use a subject line.</li>
+                  <li>Click <strong>Save</strong>.</li>
+                </ol>
+              </div>
+            </details>
+
+          </div>
+        </div>
+
       </section>
 
-      <!-- Preview -->
-      <section id="preview" class="bg-white rounded-2xl shadow-sm border ln-border p-5 sm:p-6 flex flex-col">
-        <h2 class="text-lg font-semibold">Preview</h2>
-        <div class="mt-3 grid grid-cols-1 gap-3">
-          <div>
-            <label for="subject" class="block text-sm font-medium mb-1">Subject</label>
-            <input id="subject" class="w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--ln-blue)]" readonly />
+
+      <!-- RIGHT COLUMN: Preview (Span 5) -->
+      <section class="lg:col-span-5 lg:sticky lg:top-6 space-y-6">
+        
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 flex flex-col h-full">
+          <div class="p-4 bg-gray-900 text-white rounded-t-xl flex justify-between items-center">
+            <h2 class="font-semibold">Message Preview</h2>
+            <span class="text-xs px-2 py-1 bg-white/10 rounded text-gray-300">Auto-updates</span>
           </div>
-          <div class="min-h-[260px]">
-            <label for="output-message" class="block text-sm font-medium mb-1">Message (plain text)</label>
-            <textarea id="output-message" class="w-full h-56 rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 resize-y focus:outline-none focus:ring-2 focus:ring-[var(--ln-blue)]" readonly></textarea>
-          </div>
-          <div>
-            <label class="block text-sm font-medium mb-1">Message (HTML preview with clickable links)</label>
-            <div id="html-preview" class="rounded-lg border ln-border p-3 bg-gray-50 text-sm"></div>
+          
+          <div class="p-5 flex-1 space-y-4">
+            
+            <!-- Subject -->
+            <div class="relative group">
+              <label class="label-base text-xs uppercase tracking-wide text-gray-500">Subject</label>
+              <div class="flex gap-2">
+                <input id="output-subject" readonly class="input-base bg-gray-50 dark:bg-gray-900 font-medium text-gray-700 dark:text-gray-200 cursor-text" />
+                <button data-copy="output-subject" class="btn-secondary px-3" title="Copy Subject">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- Body -->
+            <div class="relative flex-1 flex flex-col">
+              <label class="label-base text-xs uppercase tracking-wide text-gray-500 flex justify-between">
+                <span>Message Body</span>
+                <span id="char-count" class="font-normal lowercase">0 chars</span>
+              </label>
+              <textarea id="output-body" class="w-full flex-1 min-h-[300px] rounded-lg border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 px-4 py-3 text-sm font-mono leading-relaxed focus:border-brand-500 focus:ring-2 focus:ring-brand-500/50 outline-none resize-none" spellcheck="false"></textarea>
+              
+              <div class="absolute bottom-4 right-4 flex gap-2">
+                <button data-copy="output-body" class="bg-white dark:bg-gray-700 shadow-md border border-gray-200 dark:border-gray-600 rounded-full px-4 py-2 text-xs font-semibold hover:bg-gray-50 dark:hover:bg-gray-600 transition-transform active:scale-95 flex items-center gap-2 text-brand-600 dark:text-brand-400">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
+                  Copy Text
+                </button>
+              </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="grid grid-cols-1 gap-3 pt-2">
+               <button id="open-mailto" class="btn-secondary w-full flex justify-center items-center gap-2 hover:bg-brand-50 dark:hover:bg-gray-700 text-brand-700 dark:text-brand-300 border-brand-200 dark:border-gray-600">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                Open Draft in Mail App
+              </button>
+              <button id="download-ics" class="btn-primary w-full flex justify-center items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                Download Calendar Event (.ics)
+              </button>
+            </div>
+
           </div>
         </div>
-        <div class="mt-3 flex flex-wrap items-center gap-2">
-          <button id="copy-subject" class="btn-ln btn-blue">Copy subject</button>
-          <button id="copy-message" class="btn-ln btn-blue">Copy message</button>
-          <button id="copy-html" class="btn-ln btn-teal">Copy as HTML</button>
-          <button id="download-ics" class="btn-ln btn-blue">Download Calendar Event (.ics)</button>
-          <span id="copy-feedback" class="text-sm text-green-700 opacity-0 transition-opacity">Copied!</span>
-        </div>
-        <p class="mt-4 text-xs text-gray-500">Pro tip: make sure your primary cover has the right access and context before you go.</p>
+
       </section>
     </main>
   </div>
 
+  <!-- JavaScript Logic -->
   <script>
-    const els = {
-      form: document.getElementById('ooo-form'),
-      template: document.getElementById('template'),
-      tz: document.getElementById('timezone'),
-      start: document.getElementById('start-date'),
-      end: document.getElementById('end-date'),
-      dateErr: document.getElementById('date-error'),
-      primaryName: document.getElementById('primary-name'),
-      primaryEmail: document.getElementById('primary-email'),
-      primaryReason: document.getElementById('primary-reason'),
-      coverWrap: document.getElementById('cover-people-container'),
-      addCover: document.getElementById('add-cover-btn'),
-      checkYesNo: () => document.querySelector('input[name="checking-comms"]:checked'),
-      cell: document.getElementById('cell-phone'),
-      includeSupport: document.getElementById('include-support-link'),
-      supportLink: document.getElementById('support-link'),
-      subject: document.getElementById('subject'),
-      msg: document.getElementById('output-message'),
-      htmlPreview: document.getElementById('html-preview'),
-      copySubject: document.getElementById('copy-subject'),
-      copyMsg: document.getElementById('copy-message'),
-      copyHtml: document.getElementById('copy-html'),
-      copied: document.getElementById('copy-feedback'),
-      darkToggle: document.getElementById('dark-toggle'),
-      rangeBtns: () => document.querySelectorAll('.range-btn'),
-      saveSettings: document.getElementById('save-settings'),
-      clearSettings: document.getElementById('clear-settings'),
-      downloadICS: document.getElementById('download-ics')
-    };
-
-    let coverId = 0;
-
-    // Init
-    populateTimezones();
-    setDefaultDates();
-    loadSettings();
-    wireEvents();
-    updateOutputs();
-
-    function wireEvents(){
-      els.form.addEventListener('input', debounce(onFormInput, 250));
-      els.template.addEventListener('change', ()=>{ updateOutputs(); saveSettings(); });
-      els.addCover.addEventListener('click', addCoverBlock);
-      els.coverWrap.addEventListener('click', (e)=>{
-        if(e.target && e.target.matches('.remove-cover')){
-          e.target.closest('.cover-block')?.remove();
-          updateOutputs();
-          saveSettings();
-        }
-      });
-      els.copySubject.addEventListener('click', ()=>copy(els.subject.value));
-      els.copyMsg.addEventListener('click', ()=>copy(els.msg.value));
-      els.copyHtml.addEventListener('click', ()=>copy(toHtmlEmail(els.subject.value, els.msg.value)));
-      els.darkToggle.addEventListener('click', toggleDark);
-      els.rangeBtns().forEach(btn=>btn.addEventListener('click', ()=>applyQuickRange(btn.dataset.range)));
-      els.saveSettings.addEventListener('click', saveSettings);
-      els.clearSettings.addEventListener('click', clearSettings);
-      els.downloadICS.addEventListener('click', downloadICS);
-    }
-
-    function toggleDark(){
-      document.documentElement.classList.toggle('dark');
-      document.body.classList.toggle('bg-gray-950');
-      document.body.classList.toggle('text-gray-100');
-    }
-
-    function debounce(fn, wait){ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a), wait) } }
-
-    function onFormInput(){
-      validateDates();
-      validatePrimary();
-      updateOutputs();
-    }
-
-    function setDefaultDates(){
-      const now = new Date();
-      const start = new Date(now);
-      start.setMinutes(0,0,0);
-      const end = new Date(start); end.setHours(start.getHours()+8);
-      els.start.value = toLocalInput(start);
-      els.end.value = toLocalInput(end);
-    }
-
-    function toLocalInput(d){
-      const pad = n=>String(n).padStart(2,'0');
-      return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-    }
-
-    function populateTimezones(){
-      const userTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-      const list = (Intl.supportedValuesOf && Intl.supportedValuesOf('timeZone')) || [userTz];
-      list.forEach(tz=>{
-        const o=document.createElement('option');
-        o.value=tz; o.textContent=tz.replaceAll('_',' ');
-        if(tz===userTz) o.selected=true;
-        els.tz.appendChild(o);
-      });
-    }
-
-    function applyQuickRange(kind){
-      const now = new Date();
-      const start = new Date(now);
-      const end = new Date(now);
-      const setWorkday = (base)=>{ base.setHours(9,0,0,0); };
-      switch(kind){
-        case 'rest-of-day':
-          start.setMinutes(0,0,0);
-          end.setHours(17,0,0,0);
-          break;
-        case 'today':
-          setWorkday(start);
-          end.setTime(start.getTime());
-          end.setHours(17,0,0,0);
-          break;
-        case 'tomorrow':
-          start.setDate(start.getDate()+1); setWorkday(start);
-          end.setTime(start.getTime()); end.setHours(17,0,0,0);
-          break;
-        case 'next-week':
-          const day = now.getDay(); // 0=Sun
-          const daysToMon = (1 - day + 7) % 7; // days until next Monday
-          start.setDate(now.getDate()+daysToMon);
-          setWorkday(start);
-          end.setTime(start.getTime());
-          end.setDate(start.getDate()+4); // Friday
-          end.setHours(17,0,0,0);
-          break;
-      }
-      els.start.value = toLocalInput(start);
-      els.end.value = toLocalInput(end);
-      updateOutputs();
-      saveSettings();
-    }
-
-    function validateDates(){
-      const s = els.start.value; const e = els.end.value;
-      els.end.min = s || '';
-      if(s && e && new Date(e) < new Date(s)){
-        els.dateErr.textContent = 'End date cannot be before the start date.';
-        return false;
-      }
-      els.dateErr.textContent = '';
-      return true;
-    }
-
-    function validatePrimary(){
-      const nameErr = document.getElementById('primary-name-error');
-      if(!els.primaryName.value.trim()){
-        nameErr.textContent = 'Primary contact name is required.';
-        return false;
-      }
-      nameErr.textContent = '';
-      return true;
-    }
-
-    function getSecondary(){
-      const out=[];
-      document.querySelectorAll('.cover-block').forEach(b=>{
-        const name = b.querySelector('.sec-name').value.trim();
-        const email = b.querySelector('.sec-email').value.trim();
-        const reason = b.querySelector('.sec-reason').value.trim();
-        if(name) out.push({name,email,reason});
-      });
-      return out;
-    }
-
-    function addCoverBlock(){
-      coverId++;
-      const wrap = document.createElement('div');
-      wrap.className = 'cover-block border ln-border rounded-xl p-4 fade-in';
-      wrap.innerHTML = `
-        <div class="flex items-center justify-between mb-3">
-          <h3 class="font-medium">Secondary cover #${coverId}</h3>
-          <button type="button" class="remove-cover btn-ln" style="background:var(--ln-gray)">Remove</button>
-        </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label class="block text-sm mb-1">Name</label>
-            <input type="text" class="sec-name w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--ln-blue)]" placeholder="John Smith" />
-          </div>
-          <div>
-            <label class="block text-sm mb-1">Email</label>
-            <input type="email" class="sec-email w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--ln-blue)]" placeholder="Jdoe@onelineage.com" />
-          </div>
-          <div class="sm:col-span-2">
-            <label class="block text-sm mb-1">Support details</label>
-            <textarea rows="2" class="sec-reason w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--ln-blue)]" placeholder="Escalations on Project X…"></textarea>
-          </div>
-        </div>`;
-      els.coverWrap.appendChild(wrap);
-    }
-
-    function getForm(){
-      return {
-        template: els.template.value,
-        start: els.start.value,
-        end: els.end.value,
-        tz: els.tz.value,
-        primaryName: els.primaryName.value.trim(),
-        primaryEmail: els.primaryEmail.value.trim(),
-        primaryReason: els.primaryReason.value.trim(),
-        secondary: getSecondary(),
-        checking: els.checkYesNo()?.value || 'No',
-        cell: els.cell.value.trim(),
-        includeSupport: els.includeSupport.checked,
-        supportLink: els.supportLink.value.trim(),
+    const App = (() => {
+      
+      const defaultState = {
+        template: 'general',
+        holidayName: '',
+        note: '',
+        start: '',
+        end: '',
+        allDay: false,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        checkEmail: false,
+        checkTeams: false,
+        primaryName: '',
+        primaryEmail: '',
+        primaryReason: '',
+        secondaries: [], 
+        cell: '',
+        footer: ''
       };
-    }
 
-    function fmt(dateString, tz){
-      if(!dateString) return null;
-      const d = new Date(dateString);
-      return new Intl.DateTimeFormat('en-US', {
-        timeZone: tz,
-        weekday: 'long', month: 'long', day: 'numeric',
-        hour: 'numeric', minute: '2-digit', hour12: true
-      }).format(d);
-    }
+      let state = { ...defaultState };
+      let presets = {};
+      
+      const els = {
+        inputs: document.querySelectorAll('input, select, textarea'),
+        template: document.getElementById('template'),
+        holidayField: document.getElementById('holiday-field'),
+        holidayName: document.getElementById('holiday-name'),
+        note: document.getElementById('template-note'),
+        start: document.getElementById('start-date'),
+        end: document.getElementById('end-date'),
+        allDay: document.getElementById('allDay'),
+        timezone: document.getElementById('timezone'),
+        checkEmail: document.getElementById('check-email'),
+        checkTeams: document.getElementById('check-teams'),
+        pName: document.getElementById('primary-name'),
+        pEmail: document.getElementById('primary-email'),
+        pReason: document.getElementById('primary-reason'),
+        secContainer: document.getElementById('secondary-container'),
+        addSecBtn: document.getElementById('add-secondary'),
+        clearContactsBtn: document.getElementById('clear-contacts'),
+        cell: document.getElementById('cell-number'),
+        footer: document.getElementById('custom-footer'),
+        outSubject: document.getElementById('output-subject'),
+        outBody: document.getElementById('output-body'),
+        dlIcs: document.getElementById('download-ics'),
+        openMailto: document.getElementById('open-mailto'),
+        dateError: document.getElementById('date-error'),
+        resetBtn: document.getElementById('reset-app'),
+        ranges: document.querySelectorAll('.range-btn'),
+        presetName: document.getElementById('preset-name'),
+        savePresetBtn: document.getElementById('save-preset'),
+        presetList: document.getElementById('preset-list')
+      };
 
-    function formatDateRange(startStr, endStr, tz) {
-      if (!startStr || !endStr) return '';
-      const start = new Date(startStr);
-      const end = new Date(endStr);
-      const isSameDay = start.getFullYear() === end.getFullYear() &&
-                        start.getMonth() === end.getMonth() &&
-                        start.getDate() === end.getDate();
+      const Utils = {
+        pad: (n) => String(n).padStart(2, '0'),
+        formatDate: (dStr, tz, options) => {
+          if(!dStr) return '';
+          return new Date(dStr).toLocaleDateString('en-US', { timeZone: tz, timeZoneName: 'short', ...options });
+        },
+        formatTime: (dStr, tz) => {
+          if(!dStr) return '';
+          return new Date(dStr).toLocaleTimeString('en-US', { timeZone: tz, hour: 'numeric', minute: '2-digit' });
+        },
+        toLocalInput: (d) => {
+           const offsetMs = d.getTimezoneOffset() * 60000;
+           const localISOTime = (new Date(d - offsetMs)).toISOString().slice(0, -1);
+           return localISOTime.slice(0, 16);
+        },
+        showToast: (msg, type='success') => {
+          const c = document.getElementById('toast-container');
+          const el = document.createElement('div');
+          const bg = type === 'error' ? 'bg-red-600' : 'bg-gray-900';
+          el.className = `${bg} text-white px-4 py-2 rounded shadow-lg mb-2 text-sm font-medium animate-slide-up`;
+          el.textContent = msg;
+          c.appendChild(el);
+          setTimeout(() => el.remove(), 3000);
+        },
+        isSameDay: (d1Str, d2Str, tz) => {
+          if (!d1Str || !d2Str) return false;
+          const d1 = new Date(d1Str).toLocaleDateString('en-US', { timeZone: tz });
+          const d2 = new Date(d2Str).toLocaleDateString('en-US', { timeZone: tz });
+          return d1 === d2;
+        }
+      };
 
-      const fullFormat = { timeZone: tz, weekday: 'long', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true };
-      const timeFormat = { timeZone: tz, hour: 'numeric', minute: '2-digit', hour12: true };
+      const Generator = {
+        build: () => {
+          const tpl = state.template;
+          const hasDates = state.start && state.end;
+          
+          // --- 1. INTRO & DATES ---
+          let intro = "Thank you for your email.";
+          let reason = "I am away from the office"; 
 
-      const startFormatted = new Intl.DateTimeFormat('en-US', fullFormat).format(start);
+          if (tpl === 'holiday') reason = `I am out of the office for ${state.holidayName || 'the holiday'}`;
+          if (tpl === 'travel') reason = "I am traveling for business";
+          if (tpl === 'conference') reason = "I am currently attending a conference";
+          if (tpl === 'medical') reason = "I am out of the office on personal leave";
 
-      if (isSameDay) {
-        const endFormatted = new Intl.DateTimeFormat('en-US', timeFormat).format(end);
-        return `${startFormatted}–${endFormatted}`;
-      } else {
-        const endFormatted = new Intl.DateTimeFormat('en-US', fullFormat).format(end);
-        return `${startFormatted}–${endFormatted}`;
-      }
-    }
+          let dateStr = "";
+          
+          if (hasDates) {
+            const tz = state.timezone;
+            const sDate = Utils.formatDate(state.start, tz, { weekday: 'long', month:'long', day:'numeric' });
+            const eDate = Utils.formatDate(state.end, tz, { weekday: 'long', month:'long', day:'numeric' });
+            const sTime = Utils.formatTime(state.start, tz);
+            const eTime = Utils.formatTime(state.end, tz);
+            const sameDay = Utils.isSameDay(state.start, state.end, tz);
 
-    function buildMessage(data){
-      const s = fmt(data.start, data.tz);
-      const e = fmt(data.end, data.tz);
-      let m = 'Thank you for your message.\n\n';
+            if (state.allDay) {
+               if (sameDay) dateStr = ` on ${sDate}`;
+               else dateStr = ` starting ${sDate} until ${eDate}`;
+            } else {
+               if (sameDay) {
+                 dateStr = ` on ${sDate} from ${sTime} to ${eTime}`;
+               } else {
+                 dateStr = ` from ${sDate} at ${sTime} until ${eDate} at ${eTime}`;
+               }
+            }
+          }
 
-      if (data.template === 'travel') {
-        m += (s && e)
-          ? `I am traveling and out of the office from ${s} to ${e} (${data.tz}). I may have limited availability.\n\n`
-          : 'I am traveling and out of the office and may have limited availability.\n\n';
-      } else if (data.template === 'conference') {
-        m += (s && e)
-          ? `I am attending a conference from ${s} to ${e} (${data.tz}). Responses may be delayed.\n\n`
-          : 'I am attending a conference and responses may be delayed.\n\n';
-      } else {
-        m += (s && e)
-          ? `I am currently out of the office from ${s} to ${e} (${data.tz}).\n\n`
-          : 'I am currently out of the office and will respond upon my return.\n\n';
-      }
+          let mainSentence = `${reason}${dateStr}.`;
+          if (state.note) {
+             mainSentence += ` ${state.note}`;
+             if (!mainSentence.endsWith('.') && !mainSentence.endsWith('!')) mainSentence += '.';
+          }
 
-      m += data.checking === 'Yes'
-        ? 'I will have limited access to email and will respond to your message as soon as possible.\n\n'
-        : 'I will not be checking email or Teams during this time. I will respond to your message upon my return.\n\n';
+          // --- 2. COMMUNICATION CHANNELS ---
+          let comms = [];
+          if (state.checkEmail) comms.push("email");
+          if (state.checkTeams) comms.push("MS Teams");
+          
+          let accessStr = "";
+          if (comms.length > 0) {
+             const joined = comms.join(' and ');
+             accessStr = `\n\nI will be checking ${joined}. Please note that my responses will be delayed.`;
+          }
 
-      if(data.primaryName){
-        const reason = data.primaryReason ? `For matters related to "${data.primaryReason}"` : 'For assistance during my absence';
-        m += `${reason}, please contact my primary cover, ${data.primaryName}${data.primaryEmail ? ` at ${data.primaryEmail}` : ''}.\n`;
-      }
+          // --- 3. CONTACTS ---
+          let contactParts = [];
+          
+          // Primary
+          if (state.primaryName || state.primaryEmail) {
+             let line = "";
+             if (state.primaryReason) {
+                line = `For matters regarding ${state.primaryReason}, please contact my colleague ${state.primaryName}`;
+             } else {
+                line = `My primary colleague covering for me is ${state.primaryName}`;
+             }
+             
+             if (state.primaryEmail) line += ` (${state.primaryEmail})`;
+             line += `.`;
+             contactParts.push(line);
+          }
 
-      if(data.secondary.length){
-        data.secondary.forEach(p=>{
-          const r = p.reason ? `for matters related to "${p.reason}"` : 'for other inquiries';
-          m += `Alternatively, ${r}, you may also reach out to ${p.name}${p.email ? ` at ${p.email}` : ''}.\n`;
-        });
-      }
+          // Secondaries
+          state.secondaries.forEach(sec => {
+             if(sec.name) {
+               let reasonText = sec.reason ? ` regarding ${sec.reason}` : '';
+               contactParts.push(`Please direct inquiries${reasonText} to ${sec.name}${sec.email ? ` (${sec.email})` : ''}.`);
+             }
+          });
 
-      if(data.includeSupport && data.supportLink){
-        m += `\nFor any new IT support requests, please submit a ticket in the Portal: ${data.supportLink}\n\n`;
-      }
+          let contactStr = contactParts.length > 0 ? `\n\n${contactParts.join('\n')}` : "";
 
-      if(data.cell){ m += `For urgent matters that cannot be handled by my cover, you can reach me on my cell at ${data.cell}.\n\n`; }
+          // --- 4. CELL PHONE ---
+          let cellStr = "";
+          if (state.cell) {
+             cellStr = `\n\nIf your matter is urgent, you can reach me at ${state.cell}.`;
+          }
 
-      m += 'Thank you,';
-      return m;
-    }
+          // --- 5. FOOTER ---
+          let footerStr = "";
+          if (state.footer) {
+             footerStr = `\n\n${state.footer}`;
+          }
 
-    function buildSubject(data){
-      const prefix = data.template === 'conference' ? 'Conference OOO' : (data.template === 'travel' ? 'Travel OOO' : 'OOO');
-      const dateRange = formatDateRange(data.start, data.end, data.tz);
-      return dateRange ? `${prefix}: ${dateRange} (${data.tz})` : prefix;
-    }
+          // --- ASSEMBLY ---
+          return `${intro} ${mainSentence}${accessStr}${contactStr}${cellStr}${footerStr}\n\nI'll get back to you when I return,`;
+        },
 
-    function updateOutputs(){
-      if(!validateDates() || !validatePrimary()){
-        els.subject.value = 'Out of Office';
-        els.msg.value = 'Please fill out all required fields correctly.';
-        els.htmlPreview.innerHTML = '<em>Please complete required fields.</em>';
-        return;
-      }
-      const data = getForm();
-      els.subject.value = buildSubject(data);
-      els.msg.value = buildMessage(data);
-      els.htmlPreview.innerHTML = toHtmlEmail(els.subject.value, els.msg.value, true);
-    }
+        buildSubject: () => {
+          const prefix = state.template === 'holiday' 
+            ? `OOO: ${state.holidayName || 'Holiday'}` 
+            : 'Out of Office';
+            
+          if (state.end) {
+            const returnDate = Utils.formatDate(state.end, state.timezone, { month: 'short', day: 'numeric' });
+            const cleanDate = returnDate.split(',').slice(0,2).join(',').trim(); 
+            return `${prefix} - Returning ${cleanDate}`;
+          }
+          return prefix;
+        },
 
-    function linkify(text){
-      const urlRegex = /(https?:\/\/[^\s]+)/g;
-      return text.replace(urlRegex, (url) => `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`);
-    }
+        buildICS: () => {
+           if (!state.start || !state.end) return null;
+           const formatDate = (isoStr) => isoStr.replace(/[-:]/g, '').split('.')[0] + 'Z';
+           const now = formatDate(new Date().toISOString());
+           const startUTC = formatDate(new Date(state.start).toISOString());
+           const endUTC = formatDate(new Date(state.end).toISOString());
+           const desc = els.outBody.value.replace(/\n/g, '\\n');
+           
+           return [
+             'BEGIN:VCALENDAR',
+             'VERSION:2.0',
+             'PRODID:-//OOO Generator//EN',
+             'BEGIN:VEVENT',
+             `UID:${Date.now()}@ooogen`,
+             `DTSTAMP:${now}`,
+             `DTSTART:${startUTC}`,
+             `DTEND:${endUTC}`,
+             `SUMMARY:${els.outSubject.value}`,
+             `DESCRIPTION:${desc}`,
+             'X-MICROSOFT-CDO-BUSYSTATUS:OOF',
+             'END:VEVENT',
+             'END:VCALENDAR'
+           ].join('\r\n');
+        }
+      };
 
-    function toHtmlEmail(subject, body, preview=false){
-      const safe = (s)=>s
-        .replace(/&/g,'&amp;')
-        .replace(/</g,'&lt;')
-        .replace(/>/g,'&gt;');
-      const withLinks = linkify(safe(body)).replace(/\n/g,'<br>');
-      const html = `<!-- Subject: ${safe(subject)} -->\n<div style="font:14px/1.5 -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Inter,Helvetica,Arial,sans-serif;color:#111">${withLinks}</div>`;
-      return preview ? html : `<!-- Subject: ${safe(subject)} -->\n` + html;
-    }
+      const Logic = {
+        init: () => {
+          // Timezones
+          const userTz = state.timezone;
+          try {
+            const tzs = Intl.supportedValuesOf('timeZone');
+            tzs.forEach(tz => {
+              const opt = document.createElement('option');
+              opt.value = tz;
+              opt.textContent = tz.replace(/_/g, ' ');
+              if (tz === userTz) opt.selected = true;
+              els.timezone.appendChild(opt);
+            });
+          } catch(e) {
+            els.timezone.innerHTML = '<option value="UTC">UTC</option>';
+          }
 
-    async function copy(text){ try{ await navigator.clipboard.writeText(text); showCopied(); }catch{} }
-    function showCopied(){ els.copied.classList.remove('opacity-0'); setTimeout(()=>els.copied.classList.add('opacity-0'), 1400); }
+          // Load Saved Presets
+          const savedPresets = localStorage.getItem('ooo_presets');
+          if(savedPresets) { presets = JSON.parse(savedPresets); }
+          Logic.renderPresetList();
 
-    // ---- Persistence ----
-    function saveSettings(){ localStorage.setItem('ooo-generator', JSON.stringify(getForm())); showCopied(); }
-    function loadSettings(){ try{ const raw = localStorage.getItem('ooo-generator'); if(!raw) return; const d=JSON.parse(raw);
-      if(d.template) els.template.value=d.template;
-      if(d.start) els.start.value=d.start; if(d.end) els.end.value=d.end; if(d.tz) els.tz.value=d.tz;
-      if(d.primaryName) els.primaryName.value=d.primaryName; if(d.primaryEmail) els.primaryEmail.value=d.primaryEmail; if(d.primaryReason) els.primaryReason.value=d.primaryReason;
-      if(d.checking){ const r=document.querySelector(`input[name="checking-comms"][value="${d.checking}"]`); if(r) r.checked=true; }
-      if(d.cell) els.cell.value=d.cell; if(typeof d.includeSupport==='boolean') els.includeSupport.checked=d.includeSupport; if(d.supportLink) els.supportLink.value=d.supportLink;
-      if(Array.isArray(d.secondary)) d.secondary.forEach(p=>{ addCoverBlock(); const last=els.coverWrap.lastElementChild; if(last){ last.querySelector('.sec-name').value=p.name||''; last.querySelector('.sec-email').value=p.email||''; last.querySelector('.sec-reason').value=p.reason||''; }});
-    }catch(e){} }
-    function clearSettings(){ localStorage.removeItem('ooo-generator'); location.reload(); }
+          // Load Current State
+          const saved = localStorage.getItem('ooo_state_v5');
+          if (saved) {
+             const parsed = JSON.parse(saved);
+             state = { ...defaultState, ...parsed };
+             Logic.applyStateToDom();
+          }
 
-    // ---- ICS generation ----
-    function pad(n){ return String(n).padStart(2,'0'); }
-    function toUtcIcs(dt){ const d = new Date(dt); return d.getUTCFullYear()+pad(d.getUTCMonth()+1)+pad(d.getUTCDate())+'T'+pad(d.getUTCHours())+pad(d.getUTCMinutes())+pad(d.getUTCSeconds())+'Z'; }
-    function buildIcs(){ const data=getForm(); if(!data.start||!data.end) return null; const uid='ooo-'+Date.now()+'@local';
-      const dtstamp=toUtcIcs(new Date()); const dtstart=toUtcIcs(data.start); const dtend=toUtcIcs(data.end); const subject=buildSubject(data).replace(/\n/g,' ');
-      const desc=buildMessage(data).replace(/\n/g,'\\n');
-      return [ 'BEGIN:VCALENDAR','PRODID:-//OOO Generator//EN','VERSION:2.0','METHOD:PUBLISH','BEGIN:VEVENT','UID:'+uid,'DTSTAMP:'+dtstamp,'DTSTART:'+dtstart,'DTEND:'+dtend,
-        'SUMMARY:'+subject,'DESCRIPTION:'+desc,'TRANSP:OPAQUE','STATUS:CONFIRMED','X-MICROSOFT-CDO-BUSYSTATUS:OOF','X-MICROSOFT-CDO-INTENDEDSTATUS:OOF','X-MICROSOFT-DISALLOW-COUNTER:TRUE','END:VEVENT','END:VCALENDAR' ].join('\r\n'); }
-    function downloadICS(){ const ics=buildIcs(); if(!ics) return; const blob=new Blob([ics],{type:'text/calendar'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='Out_of_Office.ics'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url); }
+          Logic.updateUI();
+          Logic.bindEvents();
+        },
+
+        save: () => {
+           localStorage.setItem('ooo_state_v5', JSON.stringify(state));
+        },
+
+        savePreset: () => {
+          const name = els.presetName.value.trim();
+          if(!name) { Utils.showToast('Please enter a profile name.', 'error'); return; }
+          
+          presets[Date.now()] = { name, data: { ...state } };
+          localStorage.setItem('ooo_presets', JSON.stringify(presets));
+          els.presetName.value = '';
+          Logic.renderPresetList();
+          Utils.showToast('Profile saved!');
+        },
+
+        loadPreset: (id) => {
+          if(presets[id]) {
+            state = { ...presets[id].data };
+            Logic.applyStateToDom();
+            Logic.updateUI();
+            Logic.save();
+            Utils.showToast(`Loaded "${presets[id].name}"`);
+          }
+        },
+
+        deletePreset: (id) => {
+          if(confirm('Delete this profile?')) {
+             delete presets[id];
+             localStorage.setItem('ooo_presets', JSON.stringify(presets));
+             Logic.renderPresetList();
+          }
+        },
+
+        renderPresetList: () => {
+           els.presetList.innerHTML = '';
+           const keys = Object.keys(presets).reverse(); // Newest first
+           if(keys.length === 0) {
+              els.presetList.innerHTML = '<p class="text-xs text-gray-400 italic text-center py-2">No saved profiles yet.</p>';
+              return;
+           }
+           
+           keys.forEach(key => {
+              const p = presets[key];
+              const div = document.createElement('div');
+              div.className = "flex items-center justify-between p-2 rounded bg-gray-50 dark:bg-gray-700/50 border border-gray-100 dark:border-gray-600";
+              div.innerHTML = `
+                <span class="text-sm font-medium text-gray-700 dark:text-gray-200 truncate">${p.name}</span>
+                <div class="flex gap-2">
+                   <button class="text-xs text-brand-600 hover:text-brand-800 font-medium load-preset" data-id="${key}">Load</button>
+                   <button class="text-xs text-gray-400 hover:text-red-500 delete-preset" data-id="${key}">✕</button>
+                </div>
+              `;
+              els.presetList.appendChild(div);
+           });
+
+           document.querySelectorAll('.load-preset').forEach(b => b.addEventListener('click', (e) => Logic.loadPreset(e.target.dataset.id)));
+           document.querySelectorAll('.delete-preset').forEach(b => b.addEventListener('click', (e) => Logic.deletePreset(e.target.dataset.id)));
+        },
+
+        applyStateToDom: () => {
+             els.template.value = state.template;
+             els.holidayName.value = state.holidayName;
+             els.note.value = state.note;
+             els.start.value = state.start;
+             els.end.value = state.end;
+             els.allDay.checked = state.allDay;
+             els.timezone.value = state.timezone;
+             els.checkEmail.checked = state.checkEmail;
+             if(els.checkTeams) els.checkTeams.checked = state.checkTeams;
+             els.pName.value = state.primaryName;
+             els.pEmail.value = state.primaryEmail;
+             els.pReason.value = state.primaryReason;
+             els.cell.value = state.cell;
+             els.footer.value = state.footer;
+             
+             els.secContainer.innerHTML = '';
+             state.secondaries.forEach(s => Logic.addSecondaryInput(s));
+        },
+
+        updateUI: () => {
+          els.holidayField.classList.toggle('hidden', state.template !== 'holiday');
+          
+          const validDates = !state.start || !state.end || new Date(state.end) > new Date(state.start);
+          
+          if (!validDates && state.start && state.end) {
+             els.dateError.textContent = "End date/time must be after start.";
+             els.dateError.classList.remove('hidden');
+             els.dlIcs.classList.add('opacity-50', 'pointer-events-none');
+          } else {
+             els.dateError.classList.add('hidden');
+             els.dlIcs.classList.remove('opacity-50', 'pointer-events-none');
+          }
+
+          const subject = Generator.buildSubject();
+          const body = Generator.build();
+          
+          if(els.outSubject.value !== subject) els.outSubject.value = subject;
+          els.outBody.value = body;
+          document.getElementById('char-count').textContent = `${body.length} chars`;
+        },
+
+        addSecondaryInput: (data = {name:'', email:'', reason:''}) => {
+           const id = Date.now() + Math.random();
+           const div = document.createElement('div');
+           div.className = "bg-gray-50 dark:bg-gray-700/30 p-4 rounded-xl border border-gray-100 dark:border-gray-700 space-y-2 animate-slide-up relative group";
+           div.dataset.id = id;
+           div.innerHTML = `
+             <h3 class="text-xs font-bold text-brand-600 dark:text-brand-400 uppercase tracking-wider mb-3">Additional Cover Person</h3>
+             <button type="button" class="absolute top-2 right-2 text-gray-400 hover:text-red-500 remove-sec">
+               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+             </button>
+             <div class="grid sm:grid-cols-2 gap-4 mb-3">
+               <div>
+                  <label class="label-base">Name</label>
+                  <input type="text" class="input-base sec-name" placeholder="Colleague Name" value="${data.name}">
+               </div>
+               <div>
+                  <label class="label-base">Email</label>
+                  <input type="email" class="input-base sec-email" placeholder="Email" value="${data.email}">
+               </div>
+             </div>
+             <div>
+                <label class="label-base text-brand-700 dark:text-brand-300 font-semibold">Topic / Reason for Contact</label>
+                <input type="text" class="input-base py-2.5 sec-reason" placeholder="e.g. 'Billing' or 'Operations'" value="${data.reason}">
+             </div>
+           `;
+           els.secContainer.appendChild(div);
+           
+           const inputs = div.querySelectorAll('input');
+           inputs.forEach(i => i.addEventListener('input', Logic.scrapeSecondaries));
+           div.querySelector('.remove-sec').addEventListener('click', () => {
+             div.remove();
+             Logic.scrapeSecondaries();
+           });
+        },
+
+        scrapeSecondaries: () => {
+           const blocks = els.secContainer.children;
+           const secs = [];
+           for (let b of blocks) {
+              secs.push({
+                name: b.querySelector('.sec-name').value,
+                email: b.querySelector('.sec-email').value,
+                reason: b.querySelector('.sec-reason').value
+              });
+           }
+           state.secondaries = secs;
+           Logic.updateUI();
+           Logic.save();
+        },
+
+        handleInput: (e) => {
+           const id = e.target.id;
+           const val = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
+           
+           if(id === 'template') state.template = val;
+           if(id === 'holiday-name') state.holidayName = val;
+           if(id === 'template-note') state.note = val;
+           if(id === 'start-date') state.start = val;
+           if(id === 'end-date') state.end = val;
+           if(id === 'allDay') state.allDay = val;
+           if(id === 'timezone') state.timezone = val;
+           if(id === 'check-email') state.checkEmail = val;
+           if(id === 'check-teams') state.checkTeams = val;
+           if(id === 'primary-name') state.primaryName = val;
+           if(id === 'primary-email') state.primaryEmail = val;
+           if(id === 'primary-reason') state.primaryReason = val;
+           if(id === 'cell-number') state.cell = val;
+           if(id === 'custom-footer') state.footer = val;
+
+           Logic.updateUI();
+           Logic.save();
+        },
+
+        setRange: (type) => {
+           const now = new Date();
+           let s = new Date();
+           let e = new Date();
+           
+           s.setHours(9,0,0,0);
+           e.setHours(17,0,0,0);
+
+           if (type === 'rest-of-today') {
+              s = new Date(); 
+              if (s.getHours() >= 17) { 
+                 s.setDate(s.getDate() + 1);
+                 s.setHours(9,0,0,0);
+              }
+              e.setHours(17,0,0,0);
+              e.setDate(s.getDate());
+              e.setFullYear(s.getFullYear());
+              e.setMonth(s.getMonth());
+           } else if (type === 'tomorrow') {
+              s.setDate(now.getDate() + 1);
+              e.setDate(now.getDate() + 1);
+           } else if (type === 'next-week') {
+              const day = now.getDay();
+              const dist = 1 + 7 - day; 
+              s.setDate(now.getDate() + dist);
+              e.setDate(s.getDate() + 4); 
+           }
+
+           els.start.value = Utils.toLocalInput(s);
+           els.end.value = Utils.toLocalInput(e);
+           state.start = els.start.value;
+           state.end = els.end.value;
+           Logic.updateUI();
+           Logic.save();
+        },
+
+        bindEvents: () => {
+          const inputs = [els.template, els.holidayName, els.note, els.start, els.end, els.allDay, els.timezone, els.checkEmail, els.checkTeams, els.pName, els.pEmail, els.pReason, els.cell, els.footer];
+          inputs.forEach(el => { if(el) el.addEventListener('input', Logic.handleInput); });
+
+          els.addSecBtn.addEventListener('click', () => { Logic.addSecondaryInput(); Logic.scrapeSecondaries(); });
+          els.clearContactsBtn.addEventListener('click', () => {
+            els.secContainer.innerHTML = '';
+            els.pName.value = ''; els.pEmail.value = ''; els.pReason.value = '';
+            Logic.handleInput({target: els.pName}); 
+            Logic.scrapeSecondaries();
+          });
+
+          els.savePresetBtn.addEventListener('click', Logic.savePreset);
+
+          els.ranges.forEach(btn => {
+             btn.addEventListener('click', () => Logic.setRange(btn.dataset.range));
+          });
+
+          document.querySelectorAll('button[data-copy]').forEach(btn => {
+             btn.addEventListener('click', (e) => {
+               const targetId = btn.dataset.copy;
+               const text = document.getElementById(targetId).value;
+               navigator.clipboard.writeText(text).then(() => {
+                 const originalHtml = btn.innerHTML;
+                 btn.innerHTML = `<span class="text-green-500 font-bold">Copied!</span>`;
+                 setTimeout(() => btn.innerHTML = originalHtml, 2000);
+               });
+             });
+          });
+
+          els.dlIcs.addEventListener('click', () => {
+             const icsData = Generator.buildICS();
+             if(!icsData) { Utils.showToast('Please set valid dates first.', 'error'); return; }
+             const blob = new Blob([icsData], { type: 'text/calendar' });
+             const url = URL.createObjectURL(blob);
+             const a = document.createElement('a');
+             a.href = url;
+             a.download = 'ooo_event.ics';
+             document.body.appendChild(a);
+             a.click();
+             document.body.removeChild(a);
+             Utils.showToast('Calendar event downloaded');
+          });
+
+          els.openMailto.addEventListener('click', () => {
+             const subj = encodeURIComponent(els.outSubject.value);
+             const body = encodeURIComponent(els.outBody.value);
+             window.open(`mailto:?subject=${subj}&body=${body}`, '_blank');
+          });
+          
+          els.resetBtn.addEventListener('click', () => {
+            if(confirm('Reset the current form? (Saved presets will remain)')) {
+               localStorage.removeItem('ooo_state_v5');
+               location.reload();
+            }
+          });
+        }
+      };
+
+      return Logic;
+    })();
+
+    document.addEventListener('DOMContentLoaded', App.init);
   </script>
 </body>
 </html>
